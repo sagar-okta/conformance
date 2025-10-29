@@ -50,7 +50,7 @@ export function createServerInfoCheck(
   return {
     id: 'server-info',
     name: 'ServerInfo',
-    description: 'Validates server implementation includes required name and version',
+    description: 'Test server info returned to client',
     status,
     timestamp: new Date().toISOString(),
     specReferences: [
