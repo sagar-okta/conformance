@@ -122,6 +122,41 @@ export async function runConformanceTest(
     }
 }
 
+async function runInteractiveMode(scenarioName: string): Promise<void> {
+    await ensureResultsDir();
+    const resultDir = createResultDir(scenarioName);
+    await fs.mkdir(resultDir, { recursive: true });
+
+    const scenario = getScenario(scenarioName);
+    if (!scenario) {
+        throw new Error(`Unknown scenario: ${scenarioName}`);
+    }
+
+    console.log(`Starting scenario: ${scenarioName}`);
+    const urls = await scenario.start();
+
+    console.log(`Server URL: ${urls.serverUrl}`);
+    console.log('Press Ctrl+C to stop and save checks...');
+
+    const handleShutdown = async () => {
+        console.log('\nShutting down...');
+
+        const checks = scenario.getChecks();
+        await fs.writeFile(path.join(resultDir, 'checks.json'), JSON.stringify(checks, null, 2));
+
+        console.log(`\nChecks:\n${JSON.stringify(checks, null, 2)}`);
+        console.log(`\nChecks saved to ${resultDir}/checks.json`);
+
+        await scenario.stop();
+        process.exit(0);
+    };
+
+    process.on('SIGINT', handleShutdown);
+    process.on('SIGTERM', handleShutdown);
+
+    await new Promise(() => {});
+}
+
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
     let command: string | null = null;
@@ -137,21 +172,34 @@ async function main(): Promise<void> {
         }
     }
 
-    if (!command || !scenario) {
-        console.error('Usage: runner --command "<command>" --scenario <scenario>');
-        console.error('Example: runner --command "tsx examples/clients/typescript/test1.ts" --scenario initialize');
+    if (!scenario) {
+        console.error('Usage: runner --scenario <scenario> [--command "<command>"]');
+        console.error('Example: runner --scenario initialize --command "tsx examples/clients/typescript/test1.ts"');
+        console.error('Or run without --command for interactive mode');
         process.exit(1);
+    }
+
+    if (!command) {
+        try {
+            await runInteractiveMode(scenario);
+        } catch (error) {
+            console.error('Interactive mode error:', error);
+            process.exit(1);
+        }
+        return;
     }
 
     try {
         const result = await runConformanceTest(command, scenario);
 
+        const denominator = result.checks.filter(c => c.status === 'SUCCESS' || c.status == 'FAILURE').length;
         const passed = result.checks.filter(c => c.status === 'SUCCESS').length;
         const failed = result.checks.filter(c => c.status === 'FAILURE').length;
 
+        console.log(`Checks:\n${JSON.stringify(result.checks, null, 2)}`);
+
         console.log(`\nTest Results:`);
-        console.log(`Passed: ${passed}/${result.checks.length}`);
-        console.log(`Failed: ${failed}/${result.checks.length}`);
+        console.log(`Passed: ${passed}/${denominator}, ${failed} failed`);
 
         if (failed > 0) {
             console.log('\nFailed Checks:');
