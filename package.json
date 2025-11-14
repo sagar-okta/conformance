@@ -26,7 +26,7 @@
     "dist"
   ],
   "bin": {
-    "conformance": "dist/index.mjs"
+    "conformance": "dist/index.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
@@ -43,7 +43,7 @@
     "vitest": "^4.0.5"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.1",
+    "@modelcontextprotocol/sdk": "^1.22.0",
     "commander": "^14.0.2",
     "express": "^5.1.0",
     "lefthook": "^2.0.2",
