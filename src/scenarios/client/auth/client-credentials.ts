@@ -50,10 +50,6 @@ export class ClientCredentialsJwtScenario implements Scenario {
       tokenEndpointAuthMethodsSupported: ['private_key_jwt'],
       tokenEndpointAuthSigningAlgValuesSupported: ['ES256'],
       onTokenRequest: async ({ grantType, body, timestamp, authBaseUrl }) => {
-        // Per RFC 7523bis, the audience MUST be the issuer identifier
-        const issuerUrl = authBaseUrl.endsWith('/')
-          ? authBaseUrl
-          : `${authBaseUrl}/`;
         if (grantType !== 'client_credentials') {
           this.checks.push({
             id: 'client-credentials-grant-type',
@@ -97,9 +93,16 @@ export class ClientCredentialsJwtScenario implements Scenario {
 
         // Verify JWT signature and claims using the generated public key
         try {
-          // Per RFC 7523bis, audience MUST be the issuer identifier
+          // Per RFC 7523bis, audience MUST be the issuer identifier.
+          // Per RFC 3986, URLs with and without trailing slash are equivalent,
+          // so we accept both forms for interoperability (e.g. Pydantic normalizes
+          // URLs by adding trailing slashes).
+          // Strip any trailing slashes first, then accept both the bare form
+          // and the form with exactly one trailing slash.
+          const withoutSlash = authBaseUrl.replace(/\/+$/, '');
+          const withSlash = `${withoutSlash}/`;
           const { payload } = await jose.jwtVerify(clientAssertion, publicKey, {
-            audience: issuerUrl,
+            audience: [withoutSlash, withSlash],
             clockTolerance: 30
           });
 

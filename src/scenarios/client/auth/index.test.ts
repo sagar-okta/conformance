@@ -3,13 +3,13 @@ import {
   runClientAgainstScenario,
   InlineClientRunner
 } from './test_helpers/testClient';
-import { runClient as goodClient } from '../../../../examples/clients/typescript/auth-test';
 import { runClient as badPrmClient } from '../../../../examples/clients/typescript/auth-test-bad-prm';
 import { runClient as noCimdClient } from '../../../../examples/clients/typescript/auth-test-no-cimd';
 import { runClient as ignoreScopeClient } from '../../../../examples/clients/typescript/auth-test-ignore-scope';
 import { runClient as partialScopesClient } from '../../../../examples/clients/typescript/auth-test-partial-scopes';
 import { runClient as ignore403Client } from '../../../../examples/clients/typescript/auth-test-ignore-403';
 import { runClient as noRetryLimitClient } from '../../../../examples/clients/typescript/auth-test-no-retry-limit';
+import { getHandler } from '../../../../examples/clients/typescript/everything-client';
 import { setLogLevel } from '../../../../examples/clients/typescript/helpers/logger';
 
 beforeAll(() => {
@@ -17,10 +17,7 @@ beforeAll(() => {
 });
 
 const skipScenarios = new Set<string>([
-  // Client credentials scenarios require SDK support for client_credentials grant
-  // Pending typescript-sdk implementation
-  'auth/client-credentials-jwt',
-  'auth/client-credentials-basic'
+  // Add scenarios that should be skipped here
 ]);
 
 const allowClientErrorScenarios = new Set<string>([
@@ -36,7 +33,11 @@ describe('Client Auth Scenarios', () => {
         // TODO: skip in a native way?
         return;
       }
-      const runner = new InlineClientRunner(goodClient);
+      const clientFn = getHandler(scenario.name);
+      if (!clientFn) {
+        throw new Error(`No handler registered for scenario: ${scenario.name}`);
+      }
+      const runner = new InlineClientRunner(clientFn);
       await runClientAgainstScenario(runner, scenario.name, {
         allowClientError: allowClientErrorScenarios.has(scenario.name)
       });

@@ -1,4 +1,5 @@
 node_modules
 results/
 lefthook-local.yml
-dist
+dist/
+.vscode/
