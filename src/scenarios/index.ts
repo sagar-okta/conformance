@@ -53,23 +53,15 @@ import {
 
 import { DNSRebindingProtectionScenario } from './server/dns-rebinding';
 
-import { authScenariosList } from './client/auth/index';
+import { authScenariosList, extensionScenariosList } from './client/auth/index';
 import { listMetadataScenarios } from './client/auth/discovery-metadata';
 
 // Pending client scenarios (not yet fully tested/implemented)
 const pendingClientScenariosList: ClientScenario[] = [
-  // Elicitation scenarios (SEP-1330)
-  new ElicitationEnumsScenario(),
-
   // JSON Schema 2020-12 (SEP-1613)
   // This test is pending until the SDK includes PR #1135 which preserves
   // $schema, $defs, and additionalProperties fields in tool schemas.
   new JsonSchema2020_12Scenario(),
-
-  // On hold until elicitation schema types are fixed
-  // https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1863
-  new ToolsCallElicitationScenario(),
-  new ElicitationDefaultsScenario(),
 
   // On hold until server-side SSE improvements are made
   // https://github.com/modelcontextprotocol/typescript-sdk/pull/1129
@@ -145,8 +137,18 @@ export const clientScenarios = new Map<string, ClientScenario>(
   allClientScenariosList.map((scenario) => [scenario.name, scenario])
 );
 
-// Scenario scenarios
+// All client test scenarios (core + extensions)
 const scenariosList: Scenario[] = [
+  new InitializeScenario(),
+  new ToolsCallScenario(),
+  new ElicitationClientDefaultsScenario(),
+  new SSERetryScenario(),
+  ...authScenariosList,
+  ...extensionScenariosList
+];
+
+// Core scenarios (tier 1 requirements)
+const coreScenariosList: Scenario[] = [
   new InitializeScenario(),
   new ToolsCallScenario(),
   new ElicitationClientDefaultsScenario(),
@@ -189,6 +191,14 @@ export function listPendingClientScenarios(): string[] {
 
 export function listAuthScenarios(): string[] {
   return authScenariosList.map((scenario) => scenario.name);
+}
+
+export function listCoreScenarios(): string[] {
+  return coreScenariosList.map((scenario) => scenario.name);
+}
+
+export function listExtensionScenarios(): string[] {
+  return extensionScenariosList.map((scenario) => scenario.name);
 }
 
 export { listMetadataScenarios };
