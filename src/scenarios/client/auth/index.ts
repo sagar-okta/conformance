@@ -21,6 +21,7 @@ import {
   ClientCredentialsJwtScenario,
   ClientCredentialsBasicScenario
 } from './client-credentials';
+import { ResourceMismatchScenario } from './resource-mismatch';
 import { PreRegistrationScenario } from './pre-registration';
 
 // Auth scenarios (required for tier 1)
@@ -37,6 +38,7 @@ export const authScenariosList: Scenario[] = [
   new ClientSecretBasicAuthScenario(),
   new ClientSecretPostAuthScenario(),
   new PublicClientAuthScenario(),
+  new ResourceMismatchScenario(),
   new PreRegistrationScenario()
 ];
 

@@ -59,6 +59,7 @@ export interface AuthServerOptions {
   onAuthorizationRequest?: (requestData: {
     clientId?: string;
     scope?: string;
+    resource?: string;
     timestamp: string;
   }) => void;
   onRegistrationRequest?: (req: Request) => {
@@ -230,6 +231,7 @@ export function createAuthServer(
       onAuthorizationRequest({
         clientId: req.query.client_id as string | undefined,
         scope: scopeParam,
+        resource: req.query.resource as string | undefined,
         timestamp
       });
     }
