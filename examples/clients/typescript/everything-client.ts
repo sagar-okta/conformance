@@ -503,10 +503,11 @@ export async function runCrossAppAccessCompleteFlow(
 
   logger.debug('Starting complete cross-app access flow...');
   logger.debug('IDP Issuer:', ctx.idp_issuer);
+  logger.debug('IDP Token Endpoint:', ctx.idp_token_endpoint);
   logger.debug('Auth Server:', ctx.auth_server_url);
 
-  // Step 1: Token Exchange (IDP ID token -> authorization grant)
-  logger.debug('Step 1: Exchanging IDP ID token for authorization grant...');
+  // Step 1: Token Exchange (IDP ID token -> ID-JAG)
+  logger.debug('Step 1: Exchanging IDP ID token for ID-JAG at IdP...');
   const tokenExchangeParams = new URLSearchParams({
     grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
     subject_token: ctx.idp_id_token,
@@ -514,7 +515,7 @@ export async function runCrossAppAccessCompleteFlow(
     client_id: ctx.client_id
   });
 
-  const tokenExchangeResponse = await fetch(`${ctx.auth_server_url}/token`, {
+  const tokenExchangeResponse = await fetch(ctx.idp_token_endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: tokenExchangeParams
@@ -526,14 +527,15 @@ export async function runCrossAppAccessCompleteFlow(
   }
 
   const tokenExchangeResult = await tokenExchangeResponse.json();
-  const authorizationGrant = tokenExchangeResult.access_token;
-  logger.debug('Token exchange successful, authorization grant obtained');
+  const idJag = tokenExchangeResult.access_token; // ID-JAG (ID-bound JSON Assertion Grant)
+  logger.debug('Token exchange successful, ID-JAG obtained');
+  logger.debug('Issued token type:', tokenExchangeResult.issued_token_type);
 
-  // Step 2: JWT Bearer Grant (authorization grant -> access token)
-  logger.debug('Step 2: Exchanging authorization grant for access token...');
+  // Step 2: JWT Bearer Grant (ID-JAG -> access token)
+  logger.debug('Step 2: Exchanging ID-JAG for access token at Auth Server...');
   const jwtBearerParams = new URLSearchParams({
     grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion: authorizationGrant,
+    assertion: idJag,
     client_id: ctx.client_id
   });
 
