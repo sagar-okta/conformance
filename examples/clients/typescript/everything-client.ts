@@ -376,7 +376,7 @@ registerScenario('auth/pre-registration', runPreRegistration);
  * Tests the first step of SEP-990 where IDP ID token is exchanged for authorization grant.
  */
 export async function runCrossAppAccessTokenExchange(
-  serverUrl: string
+  _serverUrl: string
 ): Promise<void> {
   const ctx = parseContext();
   if (ctx.name !== 'auth/cross-app-access-token-exchange') {
