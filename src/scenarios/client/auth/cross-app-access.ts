@@ -78,18 +78,15 @@ export class CrossAppAccessCompleteFlowScenario implements Scenario {
     // Start auth server with JWT bearer grant support only
     // Token exchange is handled by IdP
     const authApp = createAuthServer(this.checks, this.authServer.getUrl, {
-      grantTypesSupported: [
-        'urn:ietf:params:oauth:grant-type:jwt-bearer'
+      grantTypesSupported: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      tokenEndpointAuthMethodsSupported: [
+        'client_secret_basic',
+        'private_key_jwt'
       ],
-      tokenEndpointAuthMethodsSupported: ['client_secret_basic', 'private_key_jwt'],
       onTokenRequest: async ({ grantType, body, timestamp, authBaseUrl }) => {
         // Auth server only handles JWT bearer grant (ID-JAG -> access token)
         if (grantType === 'urn:ietf:params:oauth:grant-type:jwt-bearer') {
-          return await this.handleJwtBearerGrant(
-            body,
-            timestamp,
-            authBaseUrl
-          );
+          return await this.handleJwtBearerGrant(body, timestamp, authBaseUrl);
         }
 
         return {
@@ -136,15 +133,20 @@ export class CrossAppAccessCompleteFlowScenario implements Scenario {
     app.use(express.urlencoded({ extended: true }));
 
     // IDP metadata endpoint
-    app.get('/.well-known/openid-configuration', (req: Request, res: Response) => {
-      res.json({
-        issuer: this.idpServer.getUrl(),
-        authorization_endpoint: `${this.idpServer.getUrl()}/authorize`,
-        token_endpoint: `${this.idpServer.getUrl()}/token`,
-        jwks_uri: `${this.idpServer.getUrl()}/.well-known/jwks.json`,
-        grant_types_supported: ['urn:ietf:params:oauth:grant-type:token-exchange']
-      });
-    });
+    app.get(
+      '/.well-known/openid-configuration',
+      (req: Request, res: Response) => {
+        res.json({
+          issuer: this.idpServer.getUrl(),
+          authorization_endpoint: `${this.idpServer.getUrl()}/authorize`,
+          token_endpoint: `${this.idpServer.getUrl()}/token`,
+          jwks_uri: `${this.idpServer.getUrl()}/.well-known/jwks.json`,
+          grant_types_supported: [
+            'urn:ietf:params:oauth:grant-type:token-exchange'
+          ]
+        });
+      }
+    );
 
     // IDP token endpoint - handles token exchange (IDP ID token -> ID-JAG)
     app.post('/token', async (req: Request, res: Response) => {

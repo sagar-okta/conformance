@@ -432,7 +432,9 @@ export async function runCrossAppAccessJwtBearer(
 ): Promise<void> {
   const ctx = parseContext();
   if (ctx.name !== 'auth/cross-app-access-jwt-bearer') {
-    throw new Error(`Expected cross-app-access-jwt-bearer context, got ${ctx.name}`);
+    throw new Error(
+      `Expected cross-app-access-jwt-bearer context, got ${ctx.name}`
+    );
   }
 
   logger.debug('Starting JWT bearer grant flow...');
@@ -485,7 +487,10 @@ export async function runCrossAppAccessJwtBearer(
   logger.debug('Connection closed successfully');
 }
 
-registerScenario('auth/cross-app-access-jwt-bearer', runCrossAppAccessJwtBearer);
+registerScenario(
+  'auth/cross-app-access-jwt-bearer',
+  runCrossAppAccessJwtBearer
+);
 
 /**
  * Cross-app access: Complete Flow (SEP-990)
